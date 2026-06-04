@@ -66,15 +66,22 @@ Cualquier hilo creado con un ID inferior a este será omitido por el scraper. De
 
 ---
 
-## Guía de Despliegue
+## Cómo Usarlo (Guía Rápida)
 
+Solo necesitas el navegador con Tampermonkey instalado. No hace falta clonar ni tocar nada del repositorio.
 
-###  Instalar en Tampermonkey
-1. Crea un nuevo script en tu extensión de Tampermonkey.
-2. Copia todo el contenido del archivo [`fc.txt`](file:///c:/Users/ortas/OneDrive/Documentos/tampermonkey/-Nuevo%20userscript-.txt) y pégalo.
-3. En la línea 10 de la cabecera, reemplaza el enlace `@resource` de plantilla con tu dirección **Raw** 
-   ```javascript
-   // @resource     jsonInteracciones https://raw.githubusercontent.com/esdutiii/forocoches_ML/refs/heads/main/mapa_interacciones.json
-   ```
-4. Configura tu `listaNegra` y `listaFavoritos` privadas en el bloque de código 1 del script.
-5. Guarda el UserScript en tu navegador. ¡Listo!
+1. **Abre el archivo `fc.txt` en GitHub:**
+   https://github.com/esdutiii/forocoches_ML/blob/main/fc.txt
+
+2. **Copia todo el contenido** (Ctrl+A → Ctrl+C).
+
+3. **Crea un nuevo script en Tampermonkey** y pega el contenido (Ctrl+V).
+
+4. **Configura tus listas privadas** (busca dentro del script la sección "1. CONFIGURACIÓN DE USUARIOS"):
+   - `listaNegra`: usuarios que quieres ocultar (trolls).
+   - `listaFavoritos`: usuarios que quieres resaltar en verde.
+   - `muletillasUsuarios`: (opcional) frases a eliminar automáticamente de los mensajes de ciertos usuarios.
+
+5. **Guarda el script** (Ctrl+S).
+
+El `@resource` ya apunta directamente al `mapa_interacciones.json` de este repositorio, no necesitas tocar nada más. El script se actualizará automáticamente con los datos más recientes cada vez que entres a ForoCoches.
