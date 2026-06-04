@@ -84,4 +84,10 @@ Solo necesitas el navegador con Tampermonkey instalado.
 
 5. **Guarda el script** (Ctrl+S).
 
-El `@resource` ya apunta directamente al `mapa_interacciones.json` de este repositorio, no necesitas tocar nada más. El script se actualizará automáticamente con los datos más recientes cada vez que entres a ForoCoches. Tus listas de usuarios permanecerán privadas en tu equipo (escritorio/móvil) nada de tu información es compartida.
+El `@resource` ya apunta directamente al `mapa_interacciones.json` de este repositorio, no necesitas tocar nada más. El script se actualizará automáticamente con los datos más recientes cada vez que entres a ForoCoches. 
+
+## Seguridad y Privacidad de tus Datos
+
+Tus listas de usuarios (`listaNegra`, `listaFavoritos`) permanecen **exclusivamente en tu equipo** (escritorio/móvil). Nunca se envían a ningún servidor externo. El `mapa_interacciones.json` que se descarga solo contiene datos públicos del foro, no información personal tuya.
+
+Todo el código de este repositorio es público y auditable. Si quieres modificar algo, puedes hacer un **fork** sin problema, siempre que me cites como autor original.
