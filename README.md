@@ -68,7 +68,7 @@ Cualquier hilo creado con un ID inferior a este será omitido por el scraper. De
 
 ## Cómo Usarlo (Guía Rápida)
 
-Solo necesitas el navegador con Tampermonkey instalado. No hace falta clonar ni tocar nada del repositorio.
+Solo necesitas el navegador con Tampermonkey instalado. 
 
 1. **Abre el archivo `fc.txt` en GitHub:**
    https://github.com/esdutiii/forocoches_ML/blob/main/fc.txt
@@ -84,4 +84,4 @@ Solo necesitas el navegador con Tampermonkey instalado. No hace falta clonar ni 
 
 5. **Guarda el script** (Ctrl+S).
 
-El `@resource` ya apunta directamente al `mapa_interacciones.json` de este repositorio, no necesitas tocar nada más. El script se actualizará automáticamente con los datos más recientes cada vez que entres a ForoCoches.
+El `@resource` ya apunta directamente al `mapa_interacciones.json` de este repositorio, no necesitas tocar nada más. El script se actualizará automáticamente con los datos más recientes cada vez que entres a ForoCoches. Tus listas de usuarios permanecerán privadas en tu equipo (escritorio/móvil) nada de tu información es compartida.
