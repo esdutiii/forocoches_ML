@@ -29,7 +29,8 @@
         'GIFTSY.COM',
         'Triceracorp',
         'pippols',
-        'adryax'
+        'adryax',
+	'aparici'
     ]);
 
     const listaFavoritos = new Set([
@@ -242,65 +243,38 @@
     }
 
     function ocultarCitasDeTrolls(contenedorPost) {
-        // Encontrar contenedores de citas comunes
-        const citas = contenedorPost.querySelectorAll('blockquote, .bbcode_quote, .quote_container, table.alt2, div.bbcode_container');
+        // ForoCoches usa div.squote > div.quote para las citas.
+        // Dentro, el autor aparece como: <div>Cita de  <b>nombre</b></div>
+        // También soportamos blockquote y .bbcode_quote como fallback para layout clásico PC.
+        const citas = contenedorPost.querySelectorAll('.squote, blockquote, .bbcode_quote, .quote_container');
         citas.forEach(cita => {
             if (cita.hasAttribute('data-fc-quote-processed')) return;
+            cita.setAttribute('data-fc-quote-processed', 'true');
 
             let autorCitado = null;
 
-            // Buscar etiquetas <b> o <strong> dentro de la cita
-            const boldTags = cita.querySelectorAll('strong, b');
+            // Método principal: buscar <b> o <strong> que esté junto a "Cita de" o "Iniciado por"
+            const boldTags = cita.querySelectorAll('b, strong');
             for (let i = 0; i < boldTags.length; i++) {
                 const tag = boldTags[i];
                 const tagText = tag.textContent.trim();
                 if (!tagText) continue;
 
-                // Comprobar si el texto de la cita o del padre del tag indica que es una cita
-                const parentText = tag.parentElement ? tag.parentElement.textContent : '';
-                const citaText = cita.textContent;
+                // Comprobar el texto del padre directo del <b>
+                const parentText = tag.parentElement ? tag.parentElement.textContent.trim() : '';
 
-                if (parentText.includes('Iniciado por') || 
-                    parentText.includes('Cita de') || 
-                    citaText.includes('Iniciado por ' + tagText) || 
-                    citaText.includes('Cita de ' + tagText) || 
-                    citaText.includes('Escrito originalmente por ' + tagText)) {
-                    
+                if (/Cita de\s+/i.test(parentText) ||
+                    /Iniciado por\s+/i.test(parentText) ||
+                    /Escrito originalmente por\s+/i.test(parentText)) {
                     autorCitado = tagText;
                     break;
-                }
-            }
-
-            // Fallback: buscar enlaces a perfiles de miembros que puedan estar al inicio de la cita
-            if (!autorCitado) {
-                const enlaces = cita.querySelectorAll('a');
-                for (let i = 0; i < enlaces.length; i++) {
-                    const enlace = enlaces[i];
-                    if (esEnlaceDeUsuario(enlace)) {
-                        const enlaceText = enlace.textContent.trim();
-                        if (enlaceText) {
-                            if (cita.textContent.includes('Iniciado por') || cita.textContent.includes('Cita de')) {
-                                autorCitado = enlaceText;
-                                break;
-                            }
-                        }
-                    }
                 }
             }
 
             if (autorCitado) {
                 const autorCitadoLower = autorCitado.toLowerCase();
                 if (listaNegraLower.has(autorCitadoLower)) {
-                    // Marcar como procesado y ocultar
-                    cita.setAttribute('data-fc-quote-processed', 'true');
                     cita.style.display = 'none';
-
-                    // Si está dentro de un contenedor bbcode_container superior, ocultamos el contenedor superior también
-                    const bbcodeContainer = cita.closest('.bbcode_container');
-                    if (bbcodeContainer) {
-                        bbcodeContainer.setAttribute('data-fc-quote-processed', 'true');
-                        bbcodeContainer.style.display = 'none';
-                    }
                 }
             }
         });
