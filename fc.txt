@@ -54,29 +54,32 @@
     // ==========================================
     // 2. PROCESAMIENTO DEL MAPA DE INTERACCIONES (GitHub ML / Cómplices)
     // ==========================================
+    // LISTA AMARILLA DESACTIVADA TEMPORALMENTE
+    // La generación de cómplices está desactivada para no marcar a nadie.
+    // Para reactivarla, descomenta el bloque siguiente.
     const listaAmarilla = new Set();
 
-    try {
-        const jsonTexto = GM_getResourceText("jsonInteracciones");
-        if (jsonTexto) {
-            const mapaInteracciones = JSON.parse(jsonTexto);
-            
-            // Recorremos el mapa de interacciones. Si un usuario ha citado a alguien de nuestra lista negra,
-            // se le añade a la lista de sospechosos (lista amarilla).
-            for (const [usuarioQueCita, listaDeCitados] of Object.entries(mapaInteracciones)) {
-                const haCitadoTroll = listaDeCitados.some(citado => listaNegraLower.has(citado.toLowerCase()));
-                if (haCitadoTroll) {
-                    const usuarioQueCitaLower = usuarioQueCita.toLowerCase();
-                    // Evitamos meter en la lista amarilla a tus favoritos o a ti mismo/lista negra
-                    if (!listaFavoritosLower.has(usuarioQueCitaLower) && !listaNegraLower.has(usuarioQueCitaLower)) {
-                        listaAmarilla.add(usuarioQueCitaLower);
-                    }
-                }
-            }
-        }
-    } catch (e) {
-        console.error("Error al procesar el mapa de interacciones de GitHub:", e);
-    }
+    // try {
+    //     const jsonTexto = GM_getResourceText("jsonInteracciones");
+    //     if (jsonTexto) {
+    //         const mapaInteracciones = JSON.parse(jsonTexto);
+    //         
+    //         // Recorremos el mapa de interacciones. Si un usuario ha citado a alguien de nuestra lista negra,
+    //         // se le añade a la lista de sospechosos (lista amarilla).
+    //         for (const [usuarioQueCita, listaDeCitados] of Object.entries(mapaInteracciones)) {
+    //             const haCitadoTroll = listaDeCitados.some(citado => listaNegraLower.has(citado.toLowerCase()));
+    //             if (haCitadoTroll) {
+    //                 const usuarioQueCitaLower = usuarioQueCita.toLowerCase();
+    //                 // Evitamos meter en la lista amarilla a tus favoritos o a ti mismo/lista negra
+    //                 if (!listaFavoritosLower.has(usuarioQueCitaLower) && !listaNegraLower.has(usuarioQueCitaLower)) {
+    //                     listaAmarilla.add(usuarioQueCitaLower);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // } catch (e) {
+    //     console.error("Error al procesar el mapa de interacciones de GitHub:", e);
+    // }
 
     // ==========================================
     // 3. INYECCIÓN DE ESTILOS CSS
