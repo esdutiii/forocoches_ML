@@ -71,7 +71,7 @@ Cualquier hilo creado con un ID inferior a este será omitido por el scraper. De
 
 ###  Instalar en Tampermonkey
 1. Crea un nuevo script en tu extensión de Tampermonkey.
-2. Copia todo el contenido del archivo [`-Nuevo userscript-.txt`](file:///c:/Users/ortas/OneDrive/Documentos/tampermonkey/-Nuevo%20userscript-.txt) y pégalo.
+2. Copia todo el contenido del archivo [`fc.txt`](file:///c:/Users/ortas/OneDrive/Documentos/tampermonkey/-Nuevo%20userscript-.txt) y pégalo.
 3. En la línea 10 de la cabecera, reemplaza el enlace `@resource` de plantilla con tu dirección **Raw** 
    ```javascript
    // @resource     jsonInteracciones https://raw.githubusercontent.com/esdutiii/forocoches_ML/refs/heads/main/mapa_interacciones.json
