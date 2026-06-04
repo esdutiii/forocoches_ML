@@ -157,6 +157,33 @@
                 padding: 4px !important;
                 box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
             }
+
+            /* Botón para ver quién ha escrito en el hilo (Who Posted) */
+            .fc-btn-whoposted {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: 8px;
+                padding: 1px 5px;
+                background-color: #f44336;
+                color: #ffffff !important;
+                border-radius: 4px;
+                font-size: 11px;
+                line-height: 1.2;
+                font-weight: bold;
+                text-decoration: none !important;
+                cursor: pointer;
+                border: none;
+                transition: background-color 0.2s, transform 0.1s;
+                vertical-align: middle;
+            }
+            .fc-btn-whoposted:hover {
+                background-color: #d32f2f;
+                transform: scale(1.1);
+            }
+            .fc-btn-whoposted:active {
+                transform: scale(0.95);
+            }
         `;
         (document.head || document.documentElement).appendChild(estilo);
     }
@@ -280,6 +307,70 @@
         });
     }
 
+    function obtenerThreadIdDeContenedor(contenedor) {
+        // 1. Intentar buscar en todos los enlaces de tipo showthread
+        const enlaces = contenedor.querySelectorAll('a');
+        for (let i = 0; i < enlaces.length; i++) {
+            const href = enlaces[i].getAttribute('href') || '';
+            // Buscar t=XXXX
+            let match = href.match(/[?&]t=(\d+)/);
+            if (match) return match[1];
+            // Buscar si el enlace tiene id con thread_title_XXXX
+            let idMatch = enlaces[i].id && enlaces[i].id.match(/thread_title_(\d+)/);
+            if (idMatch) return idMatch[1];
+        }
+        
+        // 2. Intentar buscar en el ID del propio contenedor
+        if (contenedor.id) {
+            let match = contenedor.id.match(/thread_(\d+)/);
+            if (match) return match[1];
+        }
+        
+        // 3. Buscar en el ancestro más cercano con ID de thread
+        const closestRow = contenedor.closest('tr[id^="thread_"]');
+        if (closestRow) {
+            return closestRow.id.replace('thread_', '');
+        }
+
+        // 4. Intentar buscar cualquier enlace con showthread
+        for (let i = 0; i < enlaces.length; i++) {
+            const href = enlaces[i].getAttribute('href') || '';
+            if (href.includes('showthread.php')) {
+                let match = href.match(/[?&][pt]=(\d+)/);
+                if (match) return match[1];
+            }
+        }
+        return null;
+    }
+
+    function inyectarBotonParticipantes(contenedor, threadId, elementoReferencia) {
+        if (!threadId) return;
+        if (contenedor.querySelector('.fc-btn-whoposted')) return;
+
+        const btn = document.createElement('a');
+        btn.className = 'fc-btn-whoposted';
+        btn.href = '#';
+        btn.title = 'Ver quién ha escrito en este hilo';
+        btn.innerHTML = '👥';
+        btn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open('/foro/misc.php?do=whoposted&t=' + threadId, 'whoposted', 'width=500,height=600,scrollbars=yes,resizable=yes');
+        };
+
+        if (elementoReferencia) {
+            elementoReferencia.after(btn);
+        } else {
+            const enlaceTitulo = contenedor.querySelector('a[id^="thread_title_"]') || 
+                                 contenedor.querySelector('a[href*="showthread.php"]');
+            if (enlaceTitulo) {
+                enlaceTitulo.after(btn);
+            } else {
+                contenedor.appendChild(btn);
+            }
+        }
+    }
+
     function procesarForoCoches() {
         inyectarEstilos();
 
@@ -308,6 +399,19 @@
 
                     if (listaNegraLower.has(nombreLower)) {
                         contenedorHilo.classList.add('fc-hilo-peligroso-moderno');
+                        // Buscar span del autor para referencia
+                        let autorSpan = null;
+                        for (let k = 0; k < spansEnHilo.length; k++) {
+                            const textoSpan = spansEnHilo[k].textContent.trim();
+                            if (textoSpan === '@' && spansEnHilo[k + 1]) {
+                                autorSpan = spansEnHilo[k + 1];
+                                break;
+                            }
+                        }
+                        const threadId = obtenerThreadIdDeContenedor(contenedorHilo);
+                        if (threadId && autorSpan) {
+                            inyectarBotonParticipantes(contenedorHilo, threadId, autorSpan);
+                        }
                     } else if (listaAmarilla.has(nombreLower)) {
                         contenedorHilo.classList.add('fc-hilo-sospechoso-moderno');
                     } else if (listaFavoritosLower.has(nombreLower)) {
@@ -332,6 +436,11 @@
                 if (contenedorHiloModerno) {
                     if (listaNegraLower.has(nombreUsuarioLower)) {
                         contenedorHiloModerno.classList.add('fc-hilo-peligroso-moderno');
+                        const threadId = obtenerThreadIdDeContenedor(contenedorHiloModerno);
+                        if (threadId) {
+                            const enlacePadre = span.closest('a') || span;
+                            inyectarBotonParticipantes(contenedorHiloModerno, threadId, enlacePadre);
+                        }
                     } else if (listaAmarilla.has(nombreUsuarioLower)) {
                         contenedorHiloModerno.classList.add('fc-hilo-sospechoso-moderno');
                     } else if (listaFavoritosLower.has(nombreUsuarioLower)) {
@@ -370,6 +479,10 @@
                         if (listaNegraLower.has(textoAutorLower)) {
                             fila.classList.add('fc-resaltado-rojo');
                             fila.setAttribute('data-fc-processed', 'true');
+                            const threadId = obtenerThreadIdDeContenedor(fila);
+                            if (threadId) {
+                                inyectarBotonParticipantes(fila, threadId, enlaceTitulo);
+                            }
                             break;
                         } else if (listaAmarilla.has(textoAutorLower)) {
                             fila.classList.add('fc-resaltado-amarillo');
