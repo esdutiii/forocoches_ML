@@ -13,7 +13,7 @@ El sistema funciona de forma **Serverless** utilizando la infraestructura de Git
 │                    NUBE (GitHub)                       │
 │  ┌─────────────────┐       ┌────────────────────────┐  │
 │  │ GitHub Actions  │ ──.   │ mapa_interacciones.json│  │
-│  │ (Ejecución 6h)  │    \  │   (Almacén en nube)    │  │
+│  │ (Ejecución 10m) │    \  │   (Almacén en nube)    │  │
 │  └────────┬────────┘     \ └───────────▲────────────┘  │
 │           │               \            │               │
 │           ▼                `──► [Empuja el JSON]       │
@@ -68,22 +68,13 @@ Cualquier hilo creado con un ID inferior a este será omitido por el scraper. De
 
 ## Guía de Despliegue
 
-### Paso 1: Configurar el repositorio en GitHub
-1. Crea un repositorio en GitHub (puede ser **Público** o **Privado**).
-2. Sube a la raíz del repositorio el archivo [`script_ml.py`](file:///c:/Users/ortas/OneDrive/Documentos/tampermonkey/script_ml.py) y la carpeta de workflows [`.github/workflows/actualizar_lista.yml`](file:///c:/Users/ortas/OneDrive/Documentos/tampermonkey/.github/workflows/actualizar_lista.yml).
-3. Si el repositorio es privado, asegúrate de activar los permisos de lectura/escritura para los workflows en *Settings -> Actions -> General -> Workflow permissions -> Read and write permissions*.
 
-### Paso 2: Ejecución y enlace al archivo JSON
-1. Ve a la pestaña **Actions** de tu repositorio de GitHub, selecciona "Actualizar Lista de Sospechosos" y pulsa **Run workflow** para forzar la primera ejecución.
-2. Tras finalizar, verás que ha aparecido el archivo `mapa_interacciones.json` en tu repositorio.
-3. Haz clic sobre él, pulsa el botón **Raw** y copia esa dirección URL pública.
-
-### Paso 3: Instalar en Tampermonkey
+###  Instalar en Tampermonkey
 1. Crea un nuevo script en tu extensión de Tampermonkey.
 2. Copia todo el contenido del archivo [`-Nuevo userscript-.txt`](file:///c:/Users/ortas/OneDrive/Documentos/tampermonkey/-Nuevo%20userscript-.txt) y pégalo.
-3. En la línea 10 de la cabecera, reemplaza el enlace `@resource` de plantilla con tu dirección **Raw** obtenida en el Paso 2:
+3. En la línea 10 de la cabecera, reemplaza el enlace `@resource` de plantilla con tu dirección **Raw** 
    ```javascript
-   // @resource     jsonInteracciones https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/mapa_interacciones.json
+   // @resource     jsonInteracciones https://raw.githubusercontent.com/esdutiii/forocoches_ML/refs/heads/main/mapa_interacciones.json
    ```
 4. Configura tu `listaNegra` y `listaFavoritos` privadas en el bloque de código 1 del script.
 5. Guarda el UserScript en tu navegador. ¡Listo!

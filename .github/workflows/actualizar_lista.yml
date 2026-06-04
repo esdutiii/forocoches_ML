@@ -2,8 +2,8 @@ name: Actualizar Lista de Sospechosos
 
 on:
   schedule:
-    # Se ejecuta de forma totalmente automática cada 6 horas
-    - cron: '0 */6 * * *'
+    # Se ejecuta de forma totalmente automática cada 10 minutos
+    - cron: '*/10 * * * *'
   workflow_dispatch: # Permite que ejecutes el flujo manualmente desde la interfaz web de GitHub
 
 permissions:
