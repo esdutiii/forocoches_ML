@@ -1,0 +1,427 @@
+// ==UserScript==
+// @name         Filtro Avanzado ForoCoches (PC y Móvil + ML)
+// @namespace    http://tampermonkey.net/
+// @version      4.0
+// @description  Filtra hilos, oculta tarjetas de la lista negra, resalta favoritos y marca cómplices en amarillo mediante un mapa de interacciones de GitHub.
+// @author       esdutii
+// @match        *://*.forocoches.com/*
+// @match        *://forocoches.com/*
+// @include      *forocoches.com*
+// @grant        GM_getResourceText
+// @resource     jsonInteracciones https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/mapa_interacciones.json
+// @run-at       document-end
+// ==/UserScript==
+
+// NOTA IMPORTANTE PARA EL USUARIO:
+// Reemplaza "TU_USUARIO/TU_REPOSITORIO" en la línea 10 (@resource) con tu nombre de usuario y
+// el nombre de tu repositorio de GitHub donde se aloje el archivo "mapa_interacciones.json".
+
+(function() {
+    'use strict';
+
+    // ==========================================
+    // 1. CONFIGURACIÓN DE USUARIOS (Tus listas privadas)
+    // ==========================================
+
+    const listaNegra = new Set([
+        'Flik',
+        'Diosisback',
+        'GIFTSY.COM',
+        'Triceracorp',
+        'pippols',
+        'adryax'
+    ]);
+
+    const listaFavoritos = new Set([
+        'Roto Dios',
+        'Tagardino'
+    ]);
+
+    const muletillasUsuarios = {
+        'Roto Dios': 'Que la gracia de mí sea con todos vosotros.',
+    };
+
+    // Auto-conversión a minúsculas para comparaciones insensibles a mayúsculas/minúsculas
+    const listaNegraLower = new Set(Array.from(listaNegra).map(u => u.toLowerCase()));
+    const listaFavoritosLower = new Set(Array.from(listaFavoritos).map(u => u.toLowerCase()));
+    const muletillasUsuariosLower = {};
+    for (let clave in muletillasUsuarios) {
+        if (muletillasUsuarios.hasOwnProperty(clave)) {
+            muletillasUsuariosLower[clave.toLowerCase()] = muletillasUsuarios[clave];
+        }
+    }
+
+    // ==========================================
+    // 2. PROCESAMIENTO DEL MAPA DE INTERACCIONES (GitHub ML / Cómplices)
+    // ==========================================
+    const listaAmarilla = new Set();
+
+    try {
+        const jsonTexto = GM_getResourceText("jsonInteracciones");
+        if (jsonTexto) {
+            const mapaInteracciones = JSON.parse(jsonTexto);
+            
+            // Recorremos el mapa de interacciones. Si un usuario ha citado a alguien de nuestra lista negra,
+            // se le añade a la lista de sospechosos (lista amarilla).
+            for (const [usuarioQueCita, listaDeCitados] of Object.entries(mapaInteracciones)) {
+                const haCitadoTroll = listaDeCitados.some(citado => listaNegraLower.has(citado.toLowerCase()));
+                if (haCitadoTroll) {
+                    const usuarioQueCitaLower = usuarioQueCita.toLowerCase();
+                    // Evitamos meter en la lista amarilla a tus favoritos o a ti mismo/lista negra
+                    if (!listaFavoritosLower.has(usuarioQueCitaLower) && !listaNegraLower.has(usuarioQueCitaLower)) {
+                        listaAmarilla.add(usuarioQueCitaLower);
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Error al procesar el mapa de interacciones de GitHub:", e);
+    }
+
+    // ==========================================
+    // 3. INYECCIÓN DE ESTILOS CSS
+    // ==========================================
+    function inyectarEstilos() {
+        if (document.getElementById('fc-filtro-estilos')) return;
+
+        const estilo = document.createElement('style');
+        estilo.id = 'fc-filtro-estilos';
+        estilo.innerHTML = `
+            /* Ocultar elementos por completo */
+            .fc-oculto {
+                display: none !important;
+            }
+
+            /* Layout clásico PC: Resaltado de hilos favoritos (verde) */
+            tr.fc-resaltado td {
+                background-color: #e2f0cb !important;
+                border-left: 5px solid #4caf50 !important;
+            }
+
+            /* Layout clásico PC: Resaltado de hilos peligrosos - Lista Negra (rojo) */
+            tr.fc-resaltado-rojo td {
+                background-color: #ffebee !important;
+                border-left: 5px solid #f44336 !important;
+            }
+
+            /* Layout clásico PC: Resaltado de hilos sospechosos - Lista Amarilla (amarillo) */
+            tr.fc-resaltado-amarillo td {
+                background-color: #fff8e1 !important;
+                border-left: 5px solid #ffc107 !important;
+            }
+
+            /* Layout moderno (Gaming / Móvil): Resaltado de hilos favoritos (verde) */
+            div.fc-resaltado-moderno {
+                background-color: #e2f0cb !important;
+                border-left: 6px solid #4caf50 !important;
+                padding-left: 4px !important;
+            }
+
+            /* Layout moderno (Gaming / Móvil): Resaltado de hilos peligrosos - Lista Negra (rojo) */
+            div.fc-hilo-peligroso-moderno {
+                background-color: #ffebee !important;
+                border-left: 6px solid #f44336 !important;
+                padding-left: 4px !important;
+                opacity: 0.85;
+            }
+
+            /* Layout moderno (Gaming / Móvil): Resaltado de hilos sospechosos - Lista Amarilla (amarillo) */
+            div.fc-hilo-sospechoso-moderno {
+                background-color: #fff8e1 !important;
+                border-left: 6px solid #ffc107 !important;
+                padding-left: 4px !important;
+            }
+
+            /* INTERIOR DE HILO: Recuadro para mensajes de usuarios favoritos (verde) */
+            .fc-recuadro-fav {
+                border: 3px solid #4caf50 !important;
+                border-radius: 8px !important;
+                background-color: #f1f8e9 !important;
+                margin-top: 8px !important;
+                margin-bottom: 8px !important;
+                padding: 4px !important;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+            }
+
+            /* INTERIOR DE HILO: Recuadro para sospechosos / cómplices (amarillo) */
+            .fc-sospechoso {
+                border: 3px solid #ffc107 !important;
+                border-radius: 8px !important;
+                background-color: #fff8e1 !important;
+                margin-top: 8px !important;
+                margin-bottom: 8px !important;
+                padding: 4px !important;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+            }
+        `;
+        (document.head || document.documentElement).appendChild(estilo);
+    }
+
+    // ==========================================
+    // 4. AUXILIARES E IDENTIFICACIÓN DE ENLACES
+    // ==========================================
+
+    function esEnlaceDeUsuario(enlace) {
+        const href = enlace.href || '';
+        const onclick = enlace.getAttribute('onclick') || '';
+        return href.includes('member.php') ||
+               href.includes('/miembros') ||
+               href.includes('/perfil') ||
+               onclick.includes('member.php') ||
+               onclick.includes('/miembros') ||
+               onclick.includes('/perfil');
+    }
+
+    // Genera una expresión regular para detectar la muletilla al final del mensaje
+    function crearRegexMuletilla(frase) {
+        let pattern = frase.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        pattern = pattern.replace(/ /g, '(?:\\s|&nbsp;)+');
+
+        if (pattern.endsWith('\\.')) {
+            pattern = pattern.slice(0, -2) + '\\.?';
+        } else if (pattern.endsWith('\\!')) {
+            pattern = pattern.slice(0, -2) + '\\!?';
+        } else if (pattern.endsWith('\\?')) {
+            pattern = pattern.slice(0, -2) + '\\??';
+        }
+
+        const trailingNoise = '((?:\\s|<br\\s*/?>|&nbsp;)*)((?:</[a-z0-9]+>|\\s)*)$';
+        return new RegExp(pattern + trailingNoise, 'i');
+    }
+
+    function limpiarMuletillas(contenedorPost, autor) {
+        const autorLower = autor.toLowerCase();
+        if (!(autorLower in muletillasUsuariosLower)) return;
+
+        const fraseABorrar = muletillasUsuariosLower[autorLower];
+        const cuerpoMensaje = contenedorPost.querySelector('div[id^="post_message_"], .post_message, .postmessage, [id^="postmessage_"]');
+
+        if (cuerpoMensaje) {
+            let html = cuerpoMensaje.innerHTML.trim();
+            const regex = crearRegexMuletilla(fraseABorrar);
+
+            if (regex.test(html)) {
+                cuerpoMensaje.innerHTML = html.replace(regex, '$2').trim();
+            }
+        }
+    }
+
+    function buscarContenedorPostCompleto(elementoAutor) {
+        let el = elementoAutor.parentElement;
+        while (el && el !== document.body) {
+            const id = el.id || '';
+
+            if (/^post_?\d+$/.test(id)) {
+                return el;
+            }
+
+            if (el.classList.contains('post-container') ||
+                el.classList.contains('post-card') ||
+                el.classList.contains('post-wrap') ||
+                el.classList.contains('postb') ||
+                el.classList.contains('post-block')) {
+                return el;
+            }
+
+            el = el.parentElement;
+        }
+
+        let fallback = elementoAutor.parentElement;
+        while (fallback && fallback !== document.body) {
+            const tieneCuerpo = fallback.querySelector('div[id^="post_message_"], .post_message, .postmessage, [id^="postmessage_"]');
+            if (tieneCuerpo) {
+                return fallback;
+            }
+            fallback = fallback.parentElement;
+        }
+
+        return elementoAutor.closest('table') || elementoAutor.closest('div[style*="display"]') || elementoAutor.parentElement;
+    }
+
+    function procesarForoCoches() {
+        inyectarEstilos();
+
+        // --- 1. MÓVIL: FILTRADO DE HILOS EN LA LISTA DE TEMAS (.threads-list) ---
+        const listaHilos = document.querySelector('.threads-list');
+        if (listaHilos) {
+            const hijosHilos = listaHilos.children;
+            for (let i = 0; i < hijosHilos.length; i++) {
+                const contenedorHilo = hijosHilos[i];
+                if (contenedorHilo.hasAttribute('data-fc-processed')) continue;
+
+                const spansEnHilo = contenedorHilo.querySelectorAll('span');
+                let nombreAutor = null;
+
+                for (let j = 0; j < spansEnHilo.length; j++) {
+                    const textoSpan = spansEnHilo[j].textContent.trim();
+                    if (textoSpan === '@' && spansEnHilo[j + 1]) {
+                        nombreAutor = spansEnHilo[j + 1].textContent.trim();
+                        break;
+                    }
+                }
+
+                if (nombreAutor) {
+                    contenedorHilo.setAttribute('data-fc-processed', 'true');
+                    const nombreLower = nombreAutor.toLowerCase();
+
+                    if (listaNegraLower.has(nombreLower)) {
+                        contenedorHilo.classList.add('fc-hilo-peligroso-moderno');
+                    } else if (listaAmarilla.has(nombreLower)) {
+                        contenedorHilo.classList.add('fc-hilo-sospechoso-moderno');
+                    } else if (listaFavoritosLower.has(nombreLower)) {
+                        contenedorHilo.classList.add('fc-resaltado-moderno');
+                    }
+                }
+            }
+        }
+
+        // --- 2. LAYOUT MODERNO / GAMING: FILTRADO DE HILOS (Divs con Flex) ---
+        const enlacesAutoresModernos = document.querySelectorAll('a[href*="showthread.php?p="] span');
+        enlacesAutoresModernos.forEach(span => {
+            if (span.hasAttribute('data-fc-processed')) return;
+            span.setAttribute('data-fc-processed', 'true');
+
+            let texto = span.textContent.trim();
+            if (texto.startsWith('@')) {
+                const nombreUsuario = texto.substring(1).split(' - ')[0].trim();
+                const nombreUsuarioLower = nombreUsuario.toLowerCase();
+                const contenedorHiloModerno = span.closest('div[style*="display: flex"][style*="flex-direction: column"]');
+
+                if (contenedorHiloModerno) {
+                    if (listaNegraLower.has(nombreUsuarioLower)) {
+                        contenedorHiloModerno.classList.add('fc-hilo-peligroso-moderno');
+                    } else if (listaAmarilla.has(nombreUsuarioLower)) {
+                        contenedorHiloModerno.classList.add('fc-hilo-sospechoso-moderno');
+                    } else if (listaFavoritosLower.has(nombreUsuarioLower)) {
+                        contenedorHiloModerno.classList.add('fc-resaltado-moderno');
+                    }
+                }
+            }
+        });
+
+        // --- 3. PC CLÁSICO: FILTRADO DE HILOS (Tablas - tr[id^="thread_"]) ---
+        const filasHilos = document.querySelectorAll('tr[id^="thread_"], #threadslist tr');
+        filasHilos.forEach(fila => {
+            if (fila.hasAttribute('data-fc-processed')) return;
+            if (fila.classList.contains('fc-oculto') || 
+                fila.classList.contains('fc-resaltado-rojo') || 
+                fila.classList.contains('fc-resaltado-amarillo')) return;
+
+            const celdas = fila.querySelectorAll('td');
+            if (celdas.length > 2) {
+                let celdaTitulo = null;
+                const enlaceTitulo = fila.querySelector('a[id^="thread_title_"]') || fila.querySelector('a[href*="showthread.php"]');
+                if (enlaceTitulo) {
+                    celdaTitulo = enlaceTitulo.closest('td');
+                }
+
+                const celdasABuscar = celdaTitulo ? [celdaTitulo] : Array.from(celdas).slice(1, -1);
+
+                for (let i = 0; i < celdasABuscar.length; i++) {
+                    const celda = celdasABuscar[i];
+                    const enlace = celda.querySelector('a[href*="member.php?u="], a[href*="/miembros/"], a[href*="/perfil/"]') ||
+                                   celda.querySelector('[onclick*="member.php?u="], [onclick*="/miembros/"], [onclick*="/perfil/"]');
+                    if (enlace) {
+                        const textoAutor = enlace.textContent.trim();
+                        const textoAutorLower = textoAutor.toLowerCase();
+
+                        if (listaNegraLower.has(textoAutorLower)) {
+                            fila.classList.add('fc-resaltado-rojo');
+                            fila.setAttribute('data-fc-processed', 'true');
+                            break;
+                        } else if (listaAmarilla.has(textoAutorLower)) {
+                            fila.classList.add('fc-resaltado-amarillo');
+                            fila.setAttribute('data-fc-processed', 'true');
+                            break;
+                        } else if (listaFavoritosLower.has(textoAutorLower)) {
+                            fila.classList.add('fc-resaltado');
+                            fila.setAttribute('data-fc-processed', 'true');
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+
+        // --- 4. PROCESAR MENSAJES DENTRO DE LOS HILOS (Tarjetas Completas) ---
+        let elementosAutores = Array.from(document.querySelectorAll('.bigusername, .username, .post-author'));
+
+        const todosLosEnlaces = document.querySelectorAll('a, span');
+        todosLosEnlaces.forEach(el => {
+            if (esEnlaceDeUsuario(el) && el.textContent.trim().length > 0) {
+                const enElCuerpo = el.closest('div[id^="post_message_"], .post_message, .postmessage, [id^="postmessage_"], blockquote, .bbcode_quote, .quote_container');
+                if (!enElCuerpo) {
+                    elementosAutores.push(el);
+                }
+            }
+        });
+
+        elementosAutores.forEach(autorPost => {
+            const textoAutor = autorPost.textContent.trim();
+            if (!textoAutor) return;
+
+            const contenedorPost = buscarContenedorPostCompleto(autorPost);
+
+            if (contenedorPost) {
+                const tieneCuerpo = contenedorPost.querySelector('div[id^="post_message_"], .post_message, .postmessage, [id^="postmessage_"]');
+                if (!tieneCuerpo && !contenedorPost.id.startsWith('post')) return;
+
+                if (contenedorPost.hasAttribute('data-fc-processed')) return;
+                contenedorPost.setAttribute('data-fc-processed', 'true');
+
+                const textoAutorLower = textoAutor.toLowerCase();
+
+                if (listaNegraLower.has(textoAutorLower)) {
+                    contenedorPost.classList.add('fc-oculto');
+                    contenedorPost.classList.remove('fc-recuadro-fav', 'fc-sospechoso');
+
+                    const anterior = contenedorPost.previousElementSibling;
+                    if (anterior && anterior.tagName.toLowerCase() === 'a' && anterior.name.startsWith('post')) {
+                        anterior.classList.add('fc-oculto');
+                    }
+                } else {
+                    limpiarMuletillas(contenedorPost, textoAutor);
+
+                    if (listaFavoritosLower.has(textoAutorLower)) {
+                        contenedorPost.classList.add('fc-recuadro-fav');
+                    } else if (listaAmarilla.has(textoAutorLower)) {
+                        contenedorPost.classList.add('fc-sospechoso');
+                    }
+                }
+            }
+        });
+    }
+
+    // ==========================================
+    // 5. EJECUCIÓN AUTOMÁTICA Y OBSERVER
+    // ==========================================
+
+    function iniciarObserver() {
+        procesarForoCoches();
+
+        let timeout = null;
+        const observer = new MutationObserver(() => {
+            if (timeout) clearTimeout(timeout);
+            timeout = setTimeout(procesarForoCoches, 50);
+        });
+
+        if (document.body) {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        } else {
+            const intervalo = setInterval(() => {
+                if (document.body) {
+                    clearInterval(intervalo);
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+            }, 50);
+        }
+    }
+
+    iniciarObserver();
+})();
