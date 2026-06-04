@@ -1,0 +1,45 @@
+name: Actualizar Lista de Sospechosos
+
+on:
+  schedule:
+    # Se ejecuta de forma totalmente automática cada 6 horas
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Permite que ejecutes el flujo manualmente desde la interfaz web de GitHub
+
+permissions:
+  contents: write # Permite al bot hacer commits y pushes en tu repositorio
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Descargar el código del repositorio
+    - name: Checkout repositorio
+      uses: actions/checkout@v4
+
+    # 2. Configurar el entorno de Python
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    # 3. Instalar dependencias necesarias
+    - name: Instalar dependencias
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4
+
+    # 4. Ejecutar el script scraper
+    - name: Ejecutar script de mapeo
+      run: python script_ml.py
+
+    # 5. Hacer commit y push del mapa de interacciones JSON actualizado
+    - name: Guardar cambios en el repositorio
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add mapa_interacciones.json
+        # Solo realiza el commit si el archivo JSON ha cambiado
+        git diff-index --quiet HEAD || git commit -m "Auto-update: Mapa de interacciones de ForoCoches"
+        git push

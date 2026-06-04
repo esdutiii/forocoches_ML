@@ -1,12 +1,12 @@
-# 🛡️ Filtro Avanzado ForoCoches (PC y Móvil + ML)
+# Filtro Avanzado ForoCoches (PC y Móvil + ML)
 
-Este proyecto es un sistema de moderación y filtrado inteligente y automatizado para el foro ForoCoches. Combina un **UserScript de Tampermonkey** en el lado del navegador (cliente) con un **Scraper de Python automatizado en la nube** (vía GitHub Actions) para detectar no solo a trolls de una lista negra, sino también a sus "cómplices" o cuentas satélite basándose en interacciones relacionales direccionales.
+Este proyecto es un sistema de moderación y filtrado inteligente y automatizado para el foro ForoCoches. Combina un **UserScript de Tampermonkey** en el lado del navegador (cliente) con un **script de Python automatizado en la nube** para detectar no solo a trolls de una lista negra, sino también a sus "cómplices" o cuentas satélite basándose en interacciones relacionales direccionales.
 
 ---
 
-## 💡 Arquitectura del Sistema
+## Arquitectura del Sistema
 
-El sistema funciona de forma **Serverless** (sin servidores ni costes de mantenimiento) utilizando la infraestructura gratuita de GitHub:
+El sistema funciona de forma **Serverless** utilizando la infraestructura de GitHub:
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -37,17 +37,17 @@ El sistema funciona de forma **Serverless** (sin servidores ni costes de manteni
 
 ---
 
-## 🎨 Código de Colores y Acciones Visuales
+## Código de Colores y Acciones Visuales
 
 El script aplica diferentes niveles de alerta visual en la lista de hilos y comentarios según el usuario:
 
 *   🟢 **Favoritos (Lista Verde):** Hilos resaltados con borde verde en el listado y recuadro completo en sus comentarios para facilitar su lectura.
-*   🔴 **Trolls directos (Lista Negra):** Sus hilos en el listado general se marcan en rojo translúcido (`opacity: 0.85`) etiquetados como **peligrosos**, y sus comentarios dentro de los hilos se **ocultan por completo** (`display: none`).
+*   🔴 **Trolls (Lista Negra):** Sus hilos en el listado general se marcan en rojo translúcido (`opacity: 0.85`) etiquetados como **peligrosos**, y sus comentarios dentro de los hilos se **ocultan por completo** (`display: none`).
 *   🟡 **Sospechosos / Cómplices (Lista Amarilla):** Usuarios que han interactuado con los trolls de tu lista negra. Sus hilos y comentarios se marcan en **amarillo/ámbar** para advertirte antes de interactuar.
 
 ---
 
-## 🔒 Seguridad e Interacción Direccional (Antisabotaje)
+## Seguridad e Interacción Direccional (Antisabotaje)
 
 Para evitar que los trolls puedan sabotear a usuarios legítimos (por ejemplo, citando masivamente a gente sana para que el sistema los marque en amarillo), **las interacciones se mapean de forma estrictamente direccional (Usuario $\rightarrow$ Troll)**:
 
@@ -56,7 +56,7 @@ Para evitar que los trolls puedan sabotear a usuarios legítimos (por ejemplo, c
 
 ---
 
-## 📅 Período de Gracia (Evitar marcas retroactivas)
+## Período de Gracia (Evitar marcas retroactivas)
 
 Para evitar marcar a usuarios que comentaron en hilos de trolls en el pasado de manera inocente, `script_ml.py` dispone de la variable:
 ```python
@@ -66,7 +66,7 @@ Cualquier hilo creado con un ID inferior a este será omitido por el scraper. De
 
 ---
 
-## 🚀 Guía de Despliegue
+## Guía de Despliegue
 
 ### Paso 1: Configurar el repositorio en GitHub
 1. Crea un repositorio en GitHub (puede ser **Público** o **Privado**).
