@@ -87,4 +87,3 @@ Cualquier hilo creado con un ID inferior a este será omitido por el scraper. De
    ```
 4. Configura tu `listaNegra` y `listaFavoritos` privadas en el bloque de código 1 del script.
 5. Guarda el UserScript en tu navegador. ¡Listo!
-# Configurado para push
