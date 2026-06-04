@@ -8,13 +8,13 @@
 // @match        *://forocoches.com/*
 // @include      *forocoches.com*
 // @grant        GM_getResourceText
-// @resource     jsonInteracciones https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/mapa_interacciones.json
+// @resource     jsonInteracciones https://raw.githubusercontent.com/esdutiii/forocoches_ML/refs/heads/main/mapa_interacciones.json
 // @run-at       document-end
 // ==/UserScript==
 
 // NOTA IMPORTANTE PARA EL USUARIO:
-// Reemplaza "TU_USUARIO/TU_REPOSITORIO" en la línea 10 (@resource) con tu nombre de usuario y
-// el nombre de tu repositorio de GitHub donde se aloje el archivo "mapa_interacciones.json".
+// El @resource de la línea 10 ya apunta al RAW del repositorio esdutiii/forocoches_ML.
+// Solo tendrías que cambiarlo si usas tu propio fork/repositorio.
 
 (function() {
     'use strict';
